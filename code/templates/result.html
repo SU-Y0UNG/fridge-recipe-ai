@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인식 결과 - 냉장고 파먹기</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <span class="logo-icon">🥗</span>
+                <div>
+                    <h1 class="logo-title">냉장고 파먹기</h1>
+                    <p class="logo-sub">있는 재료로 맛있는 한 끼</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-item">🏠 홈</a>
+                <span class="nav-item active">🔍 인식 결과</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="result-section">
+        <div class="result-inner">
+            <!-- 왼쪽: 이미지 + 안내 -->
+            <div class="result-left">
+                <div class="result-hero">
+                    <h2 class="result-title">
+                        냉장고 속 재료를<br>
+                        <span class="highlight">인식했어요!</span>
+                    </h2>
+                    <p class="result-desc">인식된 재료를 확인하고, 빠진 재료는 직접 추가해보세요 🌿</p>
+                </div>
+                <div class="result-image-box">
+                    <img src="/{{ image_path }}" class="result-image" alt="업로드 이미지">
+                </div>
+            </div>
+
+            <!-- 오른쪽: 재료 목록 + 검색 -->
+            <div class="result-right">
+                <form action="/recommend" method="POST" id="ingredientForm">
+                    <!-- AI 인식 재료 -->
+                    <div class="ingredient-section">
+                        <div class="section-header">
+                            <h3>🤖 AI 인식 재료</h3>
+                            <span class="badge">{{ ingredients|length }}개 감지</span>
+                        </div>
+
+                        {% if ingredients %}
+                        <div class="ingredient-grid">
+                            {% for item in ingredients %}
+                            <label class="ingredient-chip checked">
+                                <input type="checkbox" name="ingredients" value="{{ item.name }}" checked>
+                                <span class="chip-name">{{ item.name }}</span>
+                                <span class="chip-conf">{{ item.confidence }}%</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="no-result">인식된 재료가 없습니다. 아래에서 직접 추가해주세요!</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 재료 직접 추가 -->
+                    <div class="ingredient-section">
+                        <div class="section-header">
+                            <h3>✏️ 재료 직접 추가</h3>
+                        </div>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" class="search-input" placeholder="재료 이름을 검색하세요 (예: 양파, 당근...)">
+                            <div id="searchResults" class="search-results" style="display:none;"></div>
+                        </div>
+                        <div id="manualIngredients" class="ingredient-grid manual-grid"></div>
+                    </div>
+
+                    <!-- 선택된 재료 요약 -->
+                    <div class="summary-bar">
+                        <span id="selectedCount">0</span>개 재료 선택됨
+                    </div>
+
+                    <button type="submit" class="submit-btn recipe-btn">
+                        🍽️ 선택한 재료로 레시피 추천 받기 →
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>🥗 냉장고 파먹기 — AI 기반 레시피 추천 서비스</p>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const manualGrid = document.getElementById('manualIngredients');
+        const addedManual = new Set();
+
+        // 선택 개수 업데이트
+        function updateCount() {
+            const checked = document.querySelectorAll('input[name="ingredients"]:checked').length;
+            const manual = document.querySelectorAll('input[name="manual_ingredients"]').length;
+            document.getElementById('selectedCount').textContent = checked + manual;
+        }
+
+        // 체크박스 변경 시 스타일 + 카운트
+        document.querySelectorAll('.ingredient-chip input').forEach(cb => {
+            cb.addEventListener('change', function() {
+                this.closest('.ingredient-chip').classList.toggle('checked', this.checked);
+                updateCount();
+            });
+        });
+
+        // 재료 검색
+        let searchTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            const q = this.value.trim();
+            if (!q) { searchResults.style.display = 'none'; return; }
+
+            searchTimer = setTimeout(async () => {
+                const res = await fetch(`/api/ingredients/search?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                
+                if (data.results.length === 0) {
+                    searchResults.innerHTML = '<div class="search-item no-match">검색 결과 없음</div>';
+                } else {
+                    searchResults.innerHTML = data.results
+                        .filter(name => !addedManual.has(name))
+                        .map(name => `<div class="search-item" onclick="addIngredient('${name}')">${name}</div>`)
+                        .join('');
+                }
+                searchResults.style.display = 'block';
+            }, 200);
+        });
+
+        // 재료 추가
+        function addIngredient(name) {
+            if (addedManual.has(name)) return;
+            addedManual.add(name);
+
+            const chip = document.createElement('div');
+            chip.className = 'ingredient-chip checked manual-chip';
+            chip.innerHTML = `
+                <input type="hidden" name="manual_ingredients" value="${name}">
+                <span class="chip-name">${name}</span>
+                <button type="button" class="chip-remove" onclick="removeIngredient(this, '${name}')">✕</button>
+            `;
+            manualGrid.appendChild(chip);
+
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            updateCount();
+        }
+
+        // 재료 제거
+        function removeIngredient(btn, name) {
+            addedManual.delete(name);
+            btn.closest('.manual-chip').remove();
+            updateCount();
+        }
+
+        // 바깥 클릭 시 검색결과 닫기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box')) searchResults.style.display = 'none';
+        });
+
+        // 초기 카운트
+        updateCount();
+    </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레시피 추천 - 냉장고 파먹기</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <span class="logo-icon">🥗</span>
+                <div>
+                    <h1 class="logo-title">냉장고 파먹기</h1>
+                    <p class="logo-sub">있는 재료로 맛있는 한 끼</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-item">🏠 홈</a>
+                <span class="nav-item active">🍽️ 레시피 추천</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="recommend-section">
+        <div class="recommend-header">
+            <h2>오늘은 이런 요리 어때요? 🍳</h2>
+            <p>선택한 재료: 
+                {% for ing in ingredients %}
+                <span class="tag">{{ ing }}</span>
+                {% endfor %}
+            </p>
+        </div>
+
+        <!-- Cuisine 필터 탭 -->
+        <div class="cuisine-tabs">
+            <form method="POST" action="/recommend" id="cuisineForm">
+                {% for ing in ingredients %}
+                <input type="hidden" name="ingredients" value="{{ ing }}">
+                {% endfor %}
+                <input type="hidden" name="cuisine" id="cuisineInput" value="">
+                
+                <button type="button" class="cuisine-tab {% if selected_cuisine == '전체' %}active{% endif %}" onclick="filterCuisine('')">🍽️ 전체</button>
+                {% for c in cuisines %}
+                <button type="button" class="cuisine-tab {% if selected_cuisine == c %}active{% endif %}" onclick="filterCuisine('{{ c }}')">
+                    {% if c == '한식' %}🍚{% elif c == '양식' %}🍝{% elif c == '중식' %}🥟{% elif c == '일식' %}🍣{% endif %}
+                    {{ c }}
+                </button>
+                {% endfor %}
+            </form>
+        </div>
+
+        {% if recipes %}
+        <div class="recipe-grid">
+            {% for recipe in recipes %}
+            <a href="/recipe/{{ recipe.id }}" class="recipe-card">
+                <div class="recipe-emoji">{{ recipe.image_emoji }}</div>
+                <div class="recipe-info">
+                    <div class="recipe-top-row">
+                        <h3 class="recipe-name">{{ recipe.name }}</h3>
+                        <span class="cuisine-badge">{{ recipe.cuisine }}</span>
+                    </div>
+                    <p class="recipe-desc">{{ recipe.description }}</p>
+                    <div class="recipe-meta">
+                        <span class="meta-item">⏱ {{ recipe.time }}</span>
+                        <span class="meta-item">📊 {{ recipe.difficulty }}</span>
+                        <span class="meta-item">🏷 {{ recipe.category }}</span>
+                        <span class="meta-item">👀 {{ recipe.views }}회</span>
+                    </div>
+                    <div class="recipe-match">
+                        <div class="match-bar">
+                            <div class="match-fill" style="width: {{ recipe.match_rate }}%"></div>
+                        </div>
+                        <span class="match-text">재료 일치율 {{ recipe.match_rate }}%</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-recipe">
+            <div style="font-size:64px;">😅</div>
+            <h3>추천할 레시피가 없습니다</h3>
+            <p>다른 재료를 추가하거나 다시 시도해보세요</p>
+            <a href="/" class="back-btn">← 처음으로</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <footer class="footer">
+        <p>🥗 냉장고 파먹기 — AI 기반 레시피 추천 서비스</p>
+    </footer>
+
+    <script>
+        function filterCuisine(cuisine) {
+            document.getElementById('cuisineInput').value = cuisine;
+            document.getElementById('cuisineForm').submit();
+        }
+    </script>
+</body>
+</html>

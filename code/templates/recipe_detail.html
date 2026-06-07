@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ recipe.name }} - 냉장고 파먹기</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <span class="logo-icon">🥗</span>
+                <div>
+                    <h1 class="logo-title">냉장고 파먹기</h1>
+                    <p class="logo-sub">있는 재료로 맛있는 한 끼</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-item">🏠 홈</a>
+                <span class="nav-item active">📖 레시피</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="detail-section">
+        <div class="detail-card">
+            <div class="detail-top">
+                <div class="detail-emoji">{{ recipe.image_emoji }}</div>
+                <div>
+                    <h2 class="detail-name">{{ recipe.name }}</h2>
+                    <p class="detail-desc">{{ recipe.description }}</p>
+                    <div class="recipe-meta">
+                        <span class="meta-item">⏱ {{ recipe.time }}</span>
+                        <span class="meta-item">📊 {{ recipe.difficulty }}</span>
+                        <span class="meta-item">🏷 {{ recipe.category }}</span>
+                        <span class="meta-item">🌍 {{ recipe.cuisine }}</span>
+                        <span class="meta-item">👀 {{ recipe.views }}회 조회</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <!-- 재료 -->
+                <div class="detail-box">
+                    <h3>🥬 필요한 재료</h3>
+                    <div class="detail-tags">
+                        {% for ing in recipe.ingredients %}
+                        <span class="tag green">{{ ing }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 양념 -->
+                <div class="detail-box">
+                    <h3>🧂 양념</h3>
+                    <div class="detail-tags">
+                        {% for s in recipe.seasonings %}
+                        <span class="tag orange">{{ s }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 조리 순서 -->
+            <div class="detail-box steps-box">
+                <h3>👨‍🍳 조리 순서</h3>
+                <div class="steps-list">
+                    {% for step in recipe.steps %}
+                    <div class="step-item">
+                        <div class="step-num">{{ loop.index }}</div>
+                        <p>{{ step }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 꿀팁 -->
+            {% if recipe.tips %}
+            <div class="detail-box tip-box">
+                <h3>💡 꿀팁</h3>
+                <p class="tip-text">{{ recipe.tips }}</p>
+            </div>
+            {% endif %}
+
+            <a href="javascript:history.back()" class="back-btn">← 돌아가기</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>🥗 냉장고 파먹기 — AI 기반 레시피 추천 서비스</p>
+    </footer>
+</body>
+</html>

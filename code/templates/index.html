@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3a6b35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="냉장고 파먹기">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <title>냉장고 파먹기 - 있는 재료로 맛있는 한 끼</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <span class="logo-icon">🥗</span>
+                <div>
+                    <h1 class="logo-title">냉장고 파먹기</h1>
+                    <p class="logo-sub">있는 재료로 맛있는 한 끼</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-item active">🏠 홈</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 히어로 섹션 -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-text">
+                <h2 class="hero-title">
+                    냉장고 속 재료로<br>
+                    <span class="highlight">맛있는 요리</span>를 찾아보세요
+                </h2>
+                <p class="hero-desc">
+                    사진을 올리면 AI가 재료를 인식하고,<br>
+                    만들 수 있는 레시피를 추천해드려요 🍳
+                </p>
+            </div>
+            <div class="hero-emoji">🥬🥕🍅🧅🥦</div>
+        </div>
+    </section>
+
+    <!-- 업로드 섹션 -->
+    <section class="upload-section">
+        <div class="upload-card">
+            <form action="/detect" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">📸</div>
+                    <h3 class="upload-title">냉장고 사진을 올려주세요</h3>
+                    <p class="upload-desc">이미지를 드래그하거나 클릭해서 업로드할 수 있어요</p>
+                    <input type="file" name="image" id="imageInput" accept="image/*" hidden>
+                    <div id="previewContainer" style="display:none;">
+                        <img id="previewImage" class="preview-img">
+                        <button type="button" class="remove-btn" id="removeBtn">✕ 다시 선택</button>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    🔍 재료 인식하기
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 기능 소개 -->
+    <section class="features">
+        <div class="features-inner">
+            <div class="feature-card">
+                <div class="feature-icon">📷</div>
+                <h3>사진 업로드</h3>
+                <p>냉장고 사진을 찍어서 올리면 AI가 재료를 자동 인식해요</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✏️</div>
+                <h3>직접 추가</h3>
+                <p>인식 못한 재료는 검색해서 직접 추가할 수 있어요</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🍽️</div>
+                <h3>레시피 추천</h3>
+                <p>선택한 재료로 만들 수 있는 요리를 추천해드려요</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 앱 설치 배너 -->
+    <div id="installBanner" class="install-banner" style="display:none;">
+        <div class="install-inner">
+            <span class="install-icon">📲</span>
+            <div class="install-text">
+                <strong>냉장고 파먹기</strong>를 앱으로 설치하세요!
+            </div>
+            <button id="installBtn" class="install-btn">설치</button>
+            <button id="dismissBtn" class="dismiss-btn">✕</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>🥗 냉장고 파먹기 — AI 기반 레시피 추천 서비스</p>
+    </footer>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const imageInput = document.getElementById('imageInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const removeBtn = document.getElementById('removeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        dropZone.addEventListener('click', () => imageInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                imageInput.files = e.dataTransfer.files;
+                showPreview(e.dataTransfer.files[0]);
+            }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length) showPreview(e.target.files[0]);
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+                dropZone.querySelector('.upload-icon').style.display = 'none';
+                dropZone.querySelector('.upload-title').style.display = 'none';
+                dropZone.querySelector('.upload-desc').style.display = 'none';
+                submitBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            imageInput.value = '';
+            previewContainer.style.display = 'none';
+            dropZone.querySelector('.upload-icon').style.display = 'block';
+            dropZone.querySelector('.upload-title').style.display = 'block';
+            dropZone.querySelector('.upload-desc').style.display = 'block';
+            submitBtn.disabled = true;
+        });
+
+        // PWA Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(() => console.log('SW 등록 완료'))
+                .catch((err) => console.log('SW 등록 실패:', err));
+        }
+
+        // PWA 앱 설치 프롬프트
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBanner) installBanner.style.display = 'flex';
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(() => {
+                        deferredPrompt = null;
+                        installBanner.style.display = 'none';
+                    });
+                }
+            });
+        }
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                installBanner.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
